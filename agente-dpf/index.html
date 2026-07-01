@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agente de Gestão da Dívida Pública Federal — Tesouro Nacional</title>
+  <meta name="description" content="Agente de IA para análise e gestão da Dívida Pública Federal brasileira com dados em tempo real do BCB, IBGE e Tesouro Nacional.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Animated background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="36" height="36" rx="8" stroke="url(#logoGrad)" stroke-width="2.5"/>
+              <path d="M12 28V18L20 12L28 18V28" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 28V22H23V28" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="20" cy="17" r="2" fill="url(#logoGrad)"/>
+              <defs>
+                <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                  <stop stop-color="#60A5FA"/>
+                  <stop offset="1" stop-color="#A78BFA"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <h1>Agente DPF</h1>
+            <span class="logo-subtitle">Gestão da Dívida Pública Federal</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge" id="status-badge">
+          <span class="status-dot"></span>
+          <span class="status-text">Aguardando</span>
+        </div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+      <!-- Controls -->
+      <section class="controls-section">
+        <button class="btn-primary" id="btn-executar" onclick="executarAgente()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>Executar Agente</span>
+        </button>
+        <div class="progress-bar" id="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+          <span class="progress-text" id="progress-text">0%</span>
+        </div>
+      </section>
+
+      <!-- Agent Log -->
+      <section class="log-section" id="log-section" style="display:none;">
+        <div class="card card-log">
+          <div class="card-header">
+            <div class="card-icon log-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <h3>Log do Agente</h3>
+          </div>
+          <div class="log-container" id="log-container"></div>
+        </div>
+      </section>
+
+      <!-- Macro Indicators -->
+      <section class="indicators-grid" id="indicators-grid" style="display:none;">
+        <div class="card card-indicator" id="card-selic">
+          <div class="indicator-header">
+            <span class="indicator-label">Taxa Selic</span>
+            <span class="indicator-source">BCB</span>
+          </div>
+          <div class="indicator-value" id="val-selic">—</div>
+          <div class="indicator-detail" id="detail-selic">Carregando...</div>
+        </div>
+        <div class="card card-indicator" id="card-ipca">
+          <div class="indicator-header">
+            <span class="indicator-label">IPCA 12m</span>
+            <span class="indicator-source">IBGE</span>
+          </div>
+          <div class="indicator-value" id="val-ipca">—</div>
+          <div class="indicator-detail" id="detail-ipca">Carregando...</div>
+        </div>
+        <div class="card card-indicator" id="card-pib">
+          <div class="indicator-header">
+            <span class="indicator-label">PIB (var. %)</span>
+            <span class="indicator-source">IBGE</span>
+          </div>
+          <div class="indicator-value" id="val-pib">—</div>
+          <div class="indicator-detail" id="detail-pib">Carregando...</div>
+        </div>
+        <div class="card card-indicator" id="card-fed">
+          <div class="indicator-header">
+            <span class="indicator-label">Fed Funds Rate</span>
+            <span class="indicator-source">FRED</span>
+          </div>
+          <div class="indicator-value" id="val-fed">—</div>
+          <div class="indicator-detail" id="detail-fed">Carregando...</div>
+        </div>
+        <div class="card card-indicator" id="card-cambio">
+          <div class="indicator-header">
+            <span class="indicator-label">Câmbio USD/BRL</span>
+            <span class="indicator-source">BCB</span>
+          </div>
+          <div class="indicator-value" id="val-cambio">—</div>
+          <div class="indicator-detail" id="detail-cambio">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- DPF Section: Estoque + Composição -->
+      <section class="dpf-grid" id="dpf-grid" style="display:none;">
+        <div class="card card-wide" id="card-estoque">
+          <div class="card-header">
+            <div class="card-icon estoque-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <h3>Estoque da DPF</h3>
+          </div>
+          <div class="estoque-content">
+            <div class="estoque-total">
+              <span class="estoque-label">Estoque Total</span>
+              <span class="estoque-value" id="estoque-total-valor">—</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="chart-composicao"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="card-variacao">
+          <div class="card-header">
+            <div class="card-icon variacao-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <h3>Fatores de Variação</h3>
+          </div>
+          <div class="variacao-content" id="variacao-content">
+            <p class="placeholder-text">Aguardando execução...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Emissões e Resgates -->
+      <section class="emissoes-section" id="emissoes-section" style="display:none;">
+        <div class="card card-full" id="card-emissoes">
+          <div class="card-header">
+            <div class="card-icon emissoes-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <h3>Emissões e Resgates</h3>
+          </div>
+          <div class="emissoes-content">
+            <div class="chart-wrapper chart-bar-wrapper">
+              <canvas id="chart-emissoes"></canvas>
+            </div>
+            <div class="emissoes-table-wrapper" id="emissoes-table-wrapper">
+              <p class="placeholder-text">Aguardando execução...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Simulação & Análise -->
+      <section class="analise-section" id="analise-section" style="display:none;">
+        <div class="card card-full" id="card-simulacao">
+          <div class="card-header">
+            <div class="card-icon simulacao-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+                <rect x="9" y="9" width="6" height="6"/>
+                <line x1="9" y1="1" x2="9" y2="4"/>
+                <line x1="15" y1="1" x2="15" y2="4"/>
+                <line x1="9" y1="20" x2="9" y2="23"/>
+                <line x1="15" y1="20" x2="15" y2="23"/>
+                <line x1="20" y1="9" x2="23" y2="9"/>
+                <line x1="20" y1="14" x2="23" y2="14"/>
+                <line x1="1" y1="9" x2="4" y2="9"/>
+                <line x1="1" y1="14" x2="4" y2="14"/>
+              </svg>
+            </div>
+            <h3>Simulação & Análise</h3>
+          </div>
+          <div class="simulacao-content" id="simulacao-content">
+            <p class="placeholder-text">Aguardando execução...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recomendações -->
+      <section class="recomendacoes-section" id="recomendacoes-section" style="display:none;">
+        <div class="card card-full card-recomendacoes" id="card-recomendacoes">
+          <div class="card-header">
+            <div class="card-icon reco-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+            <h3>Recomendações Estratégicas</h3>
+          </div>
+          <div class="recomendacoes-content" id="recomendacoes-content">
+            <p class="placeholder-text">Aguardando execução...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Agente DPF • Dados: BCB, IBGE, Tesouro Nacional, FRED</span>
+      <span>Uso educacional e analítico</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
